@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
+import org.junit.rules.ExpectedException;
 
 import br.ce.wcaquino.entidades.Filme;
 import br.ce.wcaquino.entidades.Locacao;
@@ -21,6 +22,9 @@ public class LocacaoServiceTest {
 	@Rule
 	public ErrorCollector error = new ErrorCollector();
 	
+	@Rule // Está rule é usada p/ a forma NOVA
+	public ExpectedException exception = ExpectedException.none();
+	
 	// Deixar o método abaixo como método de teste do JUnit
 	// public static void main(String[] args) {
 	
@@ -28,7 +32,8 @@ public class LocacaoServiceTest {
 	// 2. Colocar a anotação @Test (do org.junit)
 	// 3. Rodar como JUnit test
 	@Test
-	public void testeLocacao() {
+	public void testeLocacao() throws Exception {
+				
 		// cenario
 		// no cenário, eu vou inicializar tudo o que eu preciso, ou seja vou instanciar as classes: LocacaoService, Usuario e Filme
 		
@@ -38,7 +43,18 @@ public class LocacaoServiceTest {
 		
 		// acao
 		// é onde eu farei a execução do método que eu quero testar
+		
+		// Em teste unitário, quando um método necessitar de Exceção EVITAR envolvê-lo em try-catch, pois este irá dificultar
+		// para localizar o erro. Ao invés do try-catch LANÇAR a exceção (throws Exception)
+		// Se o teste não está esperando exceção nenhuma DEIXE que o JUnit gerencie p/ vc (usando o throws Exception)
+		// Já quando o teste espera alguma exceção temos 3 formas de verificar
+		
+		
 		Locacao locacao = service.alugarFilme(usuario, filme);
+		
+		// Diferença entre ERRO e FALHAS:
+		// FALHAS: É quando o teste não passa em alguma verificação lógica, como os Asserts por exemplo
+		// ERROS: É quando algum problema durante a execução do teste IMPEDE que ele seja concuído 
 		
 		// verificacao
 		// para garantir a verificação (as assertivas, substituir o System.out... pela assertiva
@@ -76,7 +92,7 @@ public class LocacaoServiceTest {
 	
 	
 	@Test
-	public void testeDataLocacao() {
+	public void testeDataLocacao() throws Exception {
 		LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		Filme filme = new Filme("Filme 1", 2, 5.0);
@@ -85,7 +101,7 @@ public class LocacaoServiceTest {
 	}
 	
 	@Test
-	public void testeDataDevolucao() {
+	public void testeDataDevolucao() throws Exception {
 		LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		Filme filme = new Filme("Filme 1", 2, 5.0);
@@ -93,6 +109,56 @@ public class LocacaoServiceTest {
 		Assert.assertTrue(DataUtils.isMesmaData(locacao.getDataRetorno(), DataUtils.obterDataComDiferencaDias(1)));
 	}
 	
+	// Formas de validar um teste que está esperando uma exeção
+	
+	// Forma 1. Elegante -> adicionar (expected=Exception.class) 
+	@Test(expected=Exception.class)
+	public void testLocacao_filmeSemEstoque() throws Exception {
+		// cenário
+		LocacaoService service = new LocacaoService();
+		Usuario usuario = new Usuario("Usuario 1");
+		Filme filme = new Filme("Filme 1", 0, 5.0); 
+		
+		// acao
+		service.alugarFilme(usuario, filme);
+	}
+	
+	// Forma 2. Robusta. Permite maior controle durante a execução do teste que a forma elegante não me dá
+	// Neste caso eu não lanço a exceção eu trato ela com try-catch
+	@Test
+	public void testLocacao_filmeSemEstoque2() {
+		// cenário
+		LocacaoService service = new LocacaoService();
+		Usuario usuario = new Usuario("Usuario 1");
+		Filme filme = new Filme("Filme 1", 2, 5.0); 
+		
+		// acao
+		try {
+			service.alugarFilme(usuario, filme);
+			// Estou usando Assert.fail p/ evitar um falso positivo, uma vez que o método só passa se o produto não tiver estoque
+			Assert.fail("Deveria ter lançado uma exceção"); 
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			Assert.assertThat(e.getMessage(), CoreMatchers.is("Filme sem estoque"));
+			//e.printStackTrace();
+		}
+	}
+	
+	// Forma 3. NOVA forma + Recente -> Implementar a rule public ExpectedException exception = ExpectedException.none();
+	@Test
+	public void testLocacao_filmeSemEstoque3() throws Exception {
+		// cenário
+		LocacaoService service = new LocacaoService();
+		Usuario usuario = new Usuario("Usuario 1");
+		Filme filme = new Filme("Filme 1", 0, 5.0); 
+		// implementar a @Rule dentro do cenário
+		exception.expect(Exception.class);
+		exception.expectMessage("Filme sem estoque");
+		
+		// acao
+		service.alugarFilme(usuario, filme);
+		
+	}
 }
 
 
