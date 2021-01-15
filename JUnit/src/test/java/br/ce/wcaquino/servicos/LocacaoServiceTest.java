@@ -4,7 +4,11 @@ package br.ce.wcaquino.servicos;
 import java.util.Date;
 
 import org.hamcrest.CoreMatchers;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -20,12 +24,43 @@ import br.ce.wcaquino.utils.DataUtils;
 
 public class LocacaoServiceTest {
 
+	// Estou colocando a LocacaoService como global, para poder usar no @Before e remover as diversas instanciações de cada test
+	private LocacaoService service;
+	private int contador = 0;
 	
 	@Rule
 	public ErrorCollector error = new ErrorCollector();
 	
 	@Rule // Está rule é usada p/ a forma NOVA
 	public ExpectedException exception = ExpectedException.none();
+	
+	// Utilização de @Before e @After 
+	// Como o próprio nome diz, posso utilizar para SIMPLIFICAR meus testes e já deixar algumas ações "automatizadas"
+	@Before
+	public void exemploBefore() {
+		System.out.println("Before");	
+		service = new LocacaoService();		
+		contador++;
+		System.out.println(contador); // contador não funciona pq o JUnit sempre zera o valor p/ garantir e evitar sujeira nas variáveis
+	}
+	
+	@After
+	public void exemploAfter() {
+		System.out.println("After");	
+	}
+	
+	
+	@BeforeClass
+	public static void exemploBeforeClass() { // precisa ser static
+		System.out.println("Before Class");	
+		
+	}
+	
+	@AfterClass
+	public static void exemploAfterClass() {
+		System.out.println("After Class");	
+	}	
+	
 	
 	// Deixar o método abaixo como método de teste do JUnit
 	// public static void main(String[] args) {
@@ -39,7 +74,7 @@ public class LocacaoServiceTest {
 		// cenario
 		// no cenário, eu vou inicializar tudo o que eu preciso, ou seja vou instanciar as classes: LocacaoService, Usuario e Filme
 		
-		LocacaoService service = new LocacaoService();
+		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		Filme filme = new Filme("Filme 1", 2, 5.0); // Instanciei o valor de 5.0, que é o valor que vou validar no meu teste
 		
@@ -95,7 +130,7 @@ public class LocacaoServiceTest {
 	
 	@Test
 	public void testeDataLocacao() throws Exception {
-		LocacaoService service = new LocacaoService();
+		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		Filme filme = new Filme("Filme 1", 2, 5.0);
 		Locacao locacao = service.alugarFilme(usuario, filme);
@@ -104,7 +139,7 @@ public class LocacaoServiceTest {
 	
 	@Test
 	public void testeDataDevolucao() throws Exception {
-		LocacaoService service = new LocacaoService();
+		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		Filme filme = new Filme("Filme 1", 2, 5.0);
 		Locacao locacao = service.alugarFilme(usuario, filme);
@@ -120,7 +155,7 @@ public class LocacaoServiceTest {
 	@Test(expected=FilmeSemEstoqueException.class)
 	public void testLocacao_filmeSemEstoque() throws Exception {
 		// cenário
-		LocacaoService service = new LocacaoService();
+		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		Filme filme = new Filme("Filme 1", 0, 5.0); 
 		
@@ -133,7 +168,7 @@ public class LocacaoServiceTest {
 	@Test
 	public void testLocacao_filmeSemEstoque2() {
 		// cenário
-		LocacaoService service = new LocacaoService();
+		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		Filme filme = new Filme("Filme 1", 0, 5.0); 
 		
@@ -167,7 +202,7 @@ public class LocacaoServiceTest {
 	@Test
 	public void testLocacao_filmeSemEstoque3() throws Exception {
 		// cenário
-		LocacaoService service = new LocacaoService();
+		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		Filme filme = new Filme("Filme 1", 0, 5.0); 
 		// implementar a @Rule dentro do cenário
@@ -186,7 +221,7 @@ public class LocacaoServiceTest {
 	@Test
 	public void testLocacao_usuarioVazio() throws FilmeSemEstoqueException, Exception {
 		// cenario
-		LocacaoService service = new LocacaoService();
+		//LocacaoService service = new LocacaoService();
 		Filme filme = new Filme("Filme 2", 1, 4.0);
 		// não estou instanciando usuario, pq quero q de null
 		
@@ -203,7 +238,7 @@ public class LocacaoServiceTest {
 	@Test
 	public void testLocacao_FilmeVazio() throws FilmeSemEstoqueException, LocadoraException, Exception {
 		// cenário
-		LocacaoService service = new LocacaoService();
+		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		
 		// implementar a @Rule dentro do cenário
