@@ -42,6 +42,7 @@ public class LocacaoServiceTest {
 		service = new LocacaoService();		
 		contador++;
 		System.out.println(contador); // contador não funciona pq o JUnit sempre zera o valor p/ garantir e evitar sujeira nas variáveis
+		// CASO EU QUEIRA levar o valor p/ os demais testes. Usar static na variável!
 	}
 	
 	@After
