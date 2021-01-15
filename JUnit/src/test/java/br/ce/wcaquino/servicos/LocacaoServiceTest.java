@@ -10,6 +10,8 @@ import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.junit.rules.ExpectedException;
 
+import br.ce.waquino.exceptions.FilmeSemEstoqueException;
+import br.ce.waquino.exceptions.LocadoraException;
 import br.ce.wcaquino.entidades.Filme;
 import br.ce.wcaquino.entidades.Locacao;
 import br.ce.wcaquino.entidades.Usuario;
@@ -111,8 +113,11 @@ public class LocacaoServiceTest {
 	
 	// Formas de validar um teste que está esperando uma exeção
 	
-	// Forma 1. Elegante -> adicionar (expected=Exception.class) 
-	@Test(expected=Exception.class)
+	// Forma 1. Elegante -> adicionar (expected=Exception.class)
+	// O problema com a solução elegante é que ela lança um Exception e esse é muito genérico. Para que esta solução seja usada
+	// de forma correta é necessário garantir que uma exceção só seja lançada por 1 caminho (cria classe de exeção ex: FilmeSemEstoqueException)
+	//@Test(expected=Exception.class)
+	@Test(expected=FilmeSemEstoqueException.class)
 	public void testLocacao_filmeSemEstoque() throws Exception {
 		// cenário
 		LocacaoService service = new LocacaoService();
@@ -130,17 +135,31 @@ public class LocacaoServiceTest {
 		// cenário
 		LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
-		Filme filme = new Filme("Filme 1", 2, 5.0); 
+		Filme filme = new Filme("Filme 1", 0, 5.0); 
 		
 		// acao
+//		try {
+//			service.alugarFilme(usuario, filme);
+//			// Estou usando Assert.fail p/ evitar um falso positivo, uma vez que o método só passa se o produto não tiver estoque
+//			Assert.fail("Deveria ter lançado uma exceção"); 
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			Assert.assertThat(e.getMessage(), CoreMatchers.is("Filme sem estoque"));
+//			//e.printStackTrace();
+//		}
+		
+		// Como a LocacaoService foi alterada, precisei incluir as demais exceptions no try catch
 		try {
 			service.alugarFilme(usuario, filme);
-			// Estou usando Assert.fail p/ evitar um falso positivo, uma vez que o método só passa se o produto não tiver estoque
-			Assert.fail("Deveria ter lançado uma exceção"); 
+		} catch (FilmeSemEstoqueException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (LocadoraException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			Assert.assertThat(e.getMessage(), CoreMatchers.is("Filme sem estoque"));
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 	}
 	
@@ -152,13 +171,50 @@ public class LocacaoServiceTest {
 		Usuario usuario = new Usuario("Usuario 1");
 		Filme filme = new Filme("Filme 1", 0, 5.0); 
 		// implementar a @Rule dentro do cenário
-		exception.expect(Exception.class);
-		exception.expectMessage("Filme sem estoque");
+		//exception.expect(Exception.class);
+		//exception.expectMessage("Filme sem estoque");
+		exception.expect(FilmeSemEstoqueException.class);
 		
 		// acao
 		service.alugarFilme(usuario, filme);
 		
 	}
+	
+	// Forma robusta + indicada pelo professor
+	// REPARE que como eu só quero validar o LocadoraException, as demais exceptions ficarm fora do try catch
+	// para evitar falso positivo
+	@Test
+	public void testLocacao_usuarioVazio() throws FilmeSemEstoqueException, Exception {
+		// cenario
+		LocacaoService service = new LocacaoService();
+		Filme filme = new Filme("Filme 2", 1, 4.0);
+		// não estou instanciando usuario, pq quero q de null
+		
+		// acao
+		try {
+			service.alugarFilme(null, filme);
+			Assert.fail(); // quando usar a forma robusta, sempre usar
+		} catch (LocadoraException e) {
+			Assert.assertThat(e.getMessage(), CoreMatchers.is("Usuário vazio"));
+		}		
+	}
+	
+	// Forma elegante
+	@Test
+	public void testLocacao_FilmeVazio() throws FilmeSemEstoqueException, LocadoraException, Exception {
+		// cenário
+		LocacaoService service = new LocacaoService();
+		Usuario usuario = new Usuario("Usuario 1");
+		
+		// implementar a @Rule dentro do cenário
+		exception.expect(LocadoraException.class);
+		exception.expectMessage("Filme vazio"); // A mensagem precisa ser IDENTICA a da classe service
+		
+		// acao
+		service.alugarFilme(usuario, null);		
+		
+	}
+	
 }
 
 
