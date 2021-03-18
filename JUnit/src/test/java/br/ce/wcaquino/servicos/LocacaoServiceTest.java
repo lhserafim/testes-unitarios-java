@@ -1,7 +1,9 @@
 package br.ce.wcaquino.servicos;
 
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -13,6 +15,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.junit.rules.ExpectedException;
+
+import com.sun.tools.javac.code.Attribute.Array;
 
 import br.ce.waquino.exceptions.FilmeSemEstoqueException;
 import br.ce.waquino.exceptions.LocadoraException;
@@ -77,7 +81,8 @@ public class LocacaoServiceTest {
 		
 		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
-		Filme filme = new Filme("Filme 1", 2, 5.0); // Instanciei o valor de 5.0, que é o valor que vou validar no meu teste
+		//Filme filme = new Filme("Filme 1", 2, 5.0); // Instanciei o valor de 5.0, que é o valor que vou validar no meu teste
+		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 2, 5.0));
 		
 		// acao
 		// é onde eu farei a execução do método que eu quero testar
@@ -88,7 +93,7 @@ public class LocacaoServiceTest {
 		// Já quando o teste espera alguma exceção temos 3 formas de verificar
 		
 		
-		Locacao locacao = service.alugarFilme(usuario, filme);
+		Locacao locacao = service.alugarFilme(usuario, filmes);
 		
 		// Diferença entre ERRO e FALHAS:
 		// FALHAS: É quando o teste não passa em alguma verificação lógica, como os Asserts por exemplo
@@ -133,8 +138,9 @@ public class LocacaoServiceTest {
 	public void testeDataLocacao() throws Exception {
 		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
-		Filme filme = new Filme("Filme 1", 2, 5.0);
-		Locacao locacao = service.alugarFilme(usuario, filme);
+		//Filme filme = new Filme("Filme 1", 2, 5.0);
+		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 2, 5.0));
+		Locacao locacao = service.alugarFilme(usuario, filmes);
 		Assert.assertThat(DataUtils.isMesmaData(locacao.getDataLocacao(), new Date()),CoreMatchers.is(true));
 	}
 	
@@ -142,8 +148,9 @@ public class LocacaoServiceTest {
 	public void testeDataDevolucao() throws Exception {
 		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
-		Filme filme = new Filme("Filme 1", 2, 5.0);
-		Locacao locacao = service.alugarFilme(usuario, filme);
+		//Filme filme = new Filme("Filme 1", 2, 5.0);
+		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 2, 5.0));
+		Locacao locacao = service.alugarFilme(usuario, filmes);
 		Assert.assertTrue(DataUtils.isMesmaData(locacao.getDataRetorno(), DataUtils.obterDataComDiferencaDias(1)));
 	}
 	
@@ -158,10 +165,11 @@ public class LocacaoServiceTest {
 		// cenário
 		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
-		Filme filme = new Filme("Filme 1", 0, 5.0); 
+		//Filme filme = new Filme("Filme 1", 0, 5.0);
+		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 0, 5.0));
 		
 		// acao
-		service.alugarFilme(usuario, filme);
+		service.alugarFilme(usuario, filmes);
 	}
 	
 	// Forma 2. Robusta. Permite maior controle durante a execução do teste que a forma elegante não me dá
@@ -171,7 +179,8 @@ public class LocacaoServiceTest {
 		// cenário
 		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
-		Filme filme = new Filme("Filme 1", 0, 5.0); 
+		//Filme filme = new Filme("Filme 1", 0, 5.0);
+		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 0, 5.0));
 		
 		// acao
 //		try {
@@ -186,7 +195,7 @@ public class LocacaoServiceTest {
 		
 		// Como a LocacaoService foi alterada, precisei incluir as demais exceptions no try catch
 		try {
-			service.alugarFilme(usuario, filme);
+			service.alugarFilme(usuario, filmes);
 		} catch (FilmeSemEstoqueException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -205,14 +214,15 @@ public class LocacaoServiceTest {
 		// cenário
 		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
-		Filme filme = new Filme("Filme 1", 0, 5.0); 
+		//Filme filme = new Filme("Filme 1", 0, 5.0);
+		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 0, 5.0));
 		// implementar a @Rule dentro do cenário
 		//exception.expect(Exception.class);
 		//exception.expectMessage("Filme sem estoque");
 		exception.expect(FilmeSemEstoqueException.class);
 		
 		// acao
-		service.alugarFilme(usuario, filme);
+		service.alugarFilme(usuario, filmes);
 		
 	}
 	
@@ -223,12 +233,13 @@ public class LocacaoServiceTest {
 	public void testLocacao_usuarioVazio() throws FilmeSemEstoqueException, Exception {
 		// cenario
 		//LocacaoService service = new LocacaoService();
-		Filme filme = new Filme("Filme 2", 1, 4.0);
+		//Filme filme = new Filme("Filme 2", 1, 4.0);
+		List<Filme> filmes = Arrays.asList(new Filme("Filme 2", 1, 4.0));
 		// não estou instanciando usuario, pq quero q de null
 		
 		// acao
 		try {
-			service.alugarFilme(null, filme);
+			service.alugarFilme(null, filmes);
 			Assert.fail(); // quando usar a forma robusta, sempre usar
 		} catch (LocadoraException e) {
 			Assert.assertThat(e.getMessage(), CoreMatchers.is("Usuário vazio"));
