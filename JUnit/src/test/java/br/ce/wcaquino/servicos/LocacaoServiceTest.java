@@ -2,6 +2,7 @@ package br.ce.wcaquino.servicos;
 
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -75,6 +77,9 @@ public class LocacaoServiceTest {
 	// 3. Rodar como JUnit test
 	@Test
 	public void testeLocacao() throws Exception {
+		//Como o teste só vai funcionar em um sábado, para evitar erros eu preciso usar o Assume
+	    //O ASSUME vai trabalhar como se fosse um IF. Se NÃO FOR sábado ele roda o teste, se não ele skip
+		Assume.assumeFalse(DataUtils.verificarDiaSemana(new Date(), Calendar.SATURDAY));
 				
 		// cenario
 		// no cenário, eu vou inicializar tudo o que eu preciso, ou seja vou instanciar as classes: LocacaoService, Usuario e Filme
@@ -98,6 +103,8 @@ public class LocacaoServiceTest {
 		// Diferença entre ERRO e FALHAS:
 		// FALHAS: É quando o teste não passa em alguma verificação lógica, como os Asserts por exemplo
 		// ERROS: É quando algum problema durante a execução do teste IMPEDE que ele seja concuído 
+		
+		// Eu só posso colocar várias assertivas se o cenário e a ação forem os mesmos.
 		
 		// verificacao
 		// para garantir a verificação (as assertivas, substituir o System.out... pela assertiva
@@ -146,6 +153,7 @@ public class LocacaoServiceTest {
 	
 	@Test
 	public void testeDataDevolucao() throws Exception {
+		Assume.assumeFalse(DataUtils.verificarDiaSemana(new Date(), Calendar.SATURDAY));
 		//LocacaoService service = new LocacaoService();
 		Usuario usuario = new Usuario("Usuario 1");
 		//Filme filme = new Filme("Filme 1", 2, 5.0);
@@ -262,7 +270,70 @@ public class LocacaoServiceTest {
 		
 	}
 	
+	
+	@Test
+	public void devePagar75PctNoFilme3() throws FilmeSemEstoqueException, LocadoraException, Exception {
+		//cenario
+		Usuario usuario = new Usuario("Usuario 1");
+		List<Filme> filmes = Arrays.asList(new Filme("Filme 1",2,4.0),new Filme("Filme 2",2,4.0),new Filme("Filme 3",2,4.0));
+		
+		//acao
+		Locacao resultado = service.alugarFilme(usuario, filmes);
+		
+		//verificacao
+		// o resultado esperado aqui é 11 (4 + 4 + 4) - 25% desc
+		Assert.assertThat(resultado.getValor(), CoreMatchers.is(11.0));
+	}
+	
+	@Test
+	public void deveDevolverNaSegundaAoAlugarNoSabado() throws FilmeSemEstoqueException, LocadoraException, Exception {
+		//Como o teste só vai funcionar em um sábado, para evitar erros eu preciso usar o Assume
+		//O ASSUME vai trabalhar como se fosse um IF. Se for sábado ele roda o teste, se não ele skip
+		Assume.assumeTrue(DataUtils.verificarDiaSemana(new Date(), Calendar.SATURDAY));
+				
+		//cenario
+		Usuario usuario = new Usuario("Usuário 1");
+		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 1, 5.0));
+		
+		//acao
+		Locacao retorno = service.alugarFilme(usuario, filmes);
+		
+		//verificacao
+		boolean ehSegunda = DataUtils.verificarDiaSemana(retorno.getDataRetorno(), Calendar.MONDAY);
+		Assert.assertTrue(ehSegunda);
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
