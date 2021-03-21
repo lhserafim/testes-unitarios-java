@@ -22,6 +22,8 @@ import com.sun.tools.javac.code.Attribute.Array;
 
 import br.ce.waquino.exceptions.FilmeSemEstoqueException;
 import br.ce.waquino.exceptions.LocadoraException;
+import br.ce.wcaquino.builder.FilmeBuilder;
+import br.ce.wcaquino.builder.UsuarioBuilder;
 import br.ce.wcaquino.entidades.Filme;
 import br.ce.wcaquino.entidades.Locacao;
 import br.ce.wcaquino.entidades.Usuario;
@@ -85,9 +87,14 @@ public class LocacaoServiceTest {
 		// no cenário, eu vou inicializar tudo o que eu preciso, ou seja vou instanciar as classes: LocacaoService, Usuario e Filme
 		
 		//LocacaoService service = new LocacaoService();
-		Usuario usuario = new Usuario("Usuario 1");
+		
+		//Usuario usuario = new Usuario("Usuario 1");
+		//Alterado p/ chamar o BUILDER
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
+		
 		//Filme filme = new Filme("Filme 1", 2, 5.0); // Instanciei o valor de 5.0, que é o valor que vou validar no meu teste
-		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 2, 5.0));
+		//List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 2, 5.0));
+		List<Filme> filmes = Arrays.asList(FilmeBuilder.umFilme().agora());
 		
 		// acao
 		// é onde eu farei a execução do método que eu quero testar
@@ -144,7 +151,7 @@ public class LocacaoServiceTest {
 	@Test
 	public void testeDataLocacao() throws Exception {
 		//LocacaoService service = new LocacaoService();
-		Usuario usuario = new Usuario("Usuario 1");
+		Usuario usuario = UsuarioBuilder.umUsuario().agora(); //UsuarioBuilder.umUsuario().agora();
 		//Filme filme = new Filme("Filme 1", 2, 5.0);
 		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 2, 5.0));
 		Locacao locacao = service.alugarFilme(usuario, filmes);
@@ -155,7 +162,7 @@ public class LocacaoServiceTest {
 	public void testeDataDevolucao() throws Exception {
 		Assume.assumeFalse(DataUtils.verificarDiaSemana(new Date(), Calendar.SATURDAY));
 		//LocacaoService service = new LocacaoService();
-		Usuario usuario = new Usuario("Usuario 1");
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
 		//Filme filme = new Filme("Filme 1", 2, 5.0);
 		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 2, 5.0));
 		Locacao locacao = service.alugarFilme(usuario, filmes);
@@ -172,9 +179,11 @@ public class LocacaoServiceTest {
 	public void testLocacao_filmeSemEstoque() throws Exception {
 		// cenário
 		//LocacaoService service = new LocacaoService();
-		Usuario usuario = new Usuario("Usuario 1");
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
 		//Filme filme = new Filme("Filme 1", 0, 5.0);
-		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 0, 5.0));
+		//List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 0, 5.0));
+		//USANDO O BUILDER
+		List<Filme> filmes = Arrays.asList(FilmeBuilder.umFilme().semEstoque().agora());
 		
 		// acao
 		service.alugarFilme(usuario, filmes);
@@ -186,7 +195,7 @@ public class LocacaoServiceTest {
 	public void testLocacao_filmeSemEstoque2() {
 		// cenário
 		//LocacaoService service = new LocacaoService();
-		Usuario usuario = new Usuario("Usuario 1");
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
 		//Filme filme = new Filme("Filme 1", 0, 5.0);
 		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 0, 5.0));
 		
@@ -221,7 +230,7 @@ public class LocacaoServiceTest {
 	public void testLocacao_filmeSemEstoque3() throws Exception {
 		// cenário
 		//LocacaoService service = new LocacaoService();
-		Usuario usuario = new Usuario("Usuario 1");
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
 		//Filme filme = new Filme("Filme 1", 0, 5.0);
 		List<Filme> filmes = Arrays.asList(new Filme("Filme 1", 0, 5.0));
 		// implementar a @Rule dentro do cenário
@@ -259,7 +268,7 @@ public class LocacaoServiceTest {
 	public void testLocacao_FilmeVazio() throws FilmeSemEstoqueException, LocadoraException, Exception {
 		// cenário
 		//LocacaoService service = new LocacaoService();
-		Usuario usuario = new Usuario("Usuario 1");
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
 		
 		// implementar a @Rule dentro do cenário
 		exception.expect(LocadoraException.class);
@@ -274,7 +283,7 @@ public class LocacaoServiceTest {
 	@Test
 	public void devePagar75PctNoFilme3() throws FilmeSemEstoqueException, LocadoraException, Exception {
 		//cenario
-		Usuario usuario = new Usuario("Usuario 1");
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
 		List<Filme> filmes = Arrays.asList(new Filme("Filme 1",2,4.0),new Filme("Filme 2",2,4.0),new Filme("Filme 3",2,4.0));
 		
 		//acao
