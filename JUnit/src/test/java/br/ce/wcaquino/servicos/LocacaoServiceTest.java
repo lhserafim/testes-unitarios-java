@@ -17,6 +17,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
 import com.sun.tools.javac.code.Attribute.Array;
 
@@ -24,6 +25,7 @@ import br.ce.waquino.exceptions.FilmeSemEstoqueException;
 import br.ce.waquino.exceptions.LocadoraException;
 import br.ce.wcaquino.builder.FilmeBuilder;
 import br.ce.wcaquino.builder.UsuarioBuilder;
+import br.ce.wcaquino.daos.LocacaoDAO;
 import br.ce.wcaquino.entidades.Filme;
 import br.ce.wcaquino.entidades.Locacao;
 import br.ce.wcaquino.entidades.Usuario;
@@ -45,9 +47,12 @@ public class LocacaoServiceTest {
 	// Utilização de @Before e @After 
 	// Como o próprio nome diz, posso utilizar para SIMPLIFICAR meus testes e já deixar algumas ações "automatizadas"
 	@Before
-	public void exemploBefore() {
+	public void setup() {
 		System.out.println("Before");	
 		service = new LocacaoService();		
+		// USANDO O MOCKITO para mockar e poder usar no método salvar()
+		LocacaoDAO dao = Mockito.mock(LocacaoDAO.class);//classToMock // interface LocacaoDAO 
+		service.setLocacaoDAO(dao);
 		contador++;
 		System.out.println(contador); // contador não funciona pq o JUnit sempre zera o valor p/ garantir e evitar sujeira nas variáveis
 		// CASO EU QUEIRA levar o valor p/ os demais testes. Usar static na variável!
