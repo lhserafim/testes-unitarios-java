@@ -17,13 +17,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.junit.rules.ExpectedException;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import com.sun.tools.javac.code.Attribute.Array;
 
 import br.ce.waquino.exceptions.FilmeSemEstoqueException;
 import br.ce.waquino.exceptions.LocadoraException;
 import br.ce.wcaquino.builder.FilmeBuilder;
+import br.ce.wcaquino.builder.LocacaoBuilder;
 import br.ce.wcaquino.builder.UsuarioBuilder;
 import br.ce.wcaquino.daos.LocacaoDAO;
 import br.ce.wcaquino.entidades.Filme;
@@ -35,8 +39,17 @@ import br.ce.wcaquino.utils.DataUtils;
 public class LocacaoServiceTest {
 
 	// Estou colocando a LocacaoService como global, para poder usar no @Before e remover as diversas instanciações de cada test
+	@InjectMocks
 	private LocacaoService service;
 	private int contador = 0;
+	
+	// Coloquei como variáveis globais, tirei do before, para poder ser usado por outros métodos
+	@Mock
+	private LocacaoDAO dao;
+	@Mock
+	private SPCService spc;
+	@Mock
+	private EmailService email;
 	
 	@Rule
 	public ErrorCollector error = new ErrorCollector();
@@ -50,12 +63,20 @@ public class LocacaoServiceTest {
 	public void setup() {
 		System.out.println("Before");	
 		service = new LocacaoService();		
-		// USANDO O MOCKITO para mockar e poder usar no método salvar()
-		LocacaoDAO dao = Mockito.mock(LocacaoDAO.class);//classToMock // interface LocacaoDAO 
-		service.setLocacaoDAO(dao);
 		contador++;
 		System.out.println(contador); // contador não funciona pq o JUnit sempre zera o valor p/ garantir e evitar sujeira nas variáveis
 		// CASO EU QUEIRA levar o valor p/ os demais testes. Usar static na variável!
+		
+		// USANDO O MOCKITO para mockar e poder usar no método salvar()
+//		dao = Mockito.mock(LocacaoDAO.class);//classToMock // interface LocacaoDAO 
+//		service.setLocacaoDAO(dao);
+//		spc = Mockito.mock(SPCService.class);
+//		service.setSPCService(spc);
+//		email = Mockito.mock(EmailService.class);
+//		service.setEmailService(email);
+		
+		// como usei as anotações @InjectMock e @Mock NÃO PRECISO FAZER os usos acima. Basta
+		MockitoAnnotations.initMocks(this);
 	}
 	
 	@After
@@ -315,6 +336,78 @@ public class LocacaoServiceTest {
 		//verificacao
 		boolean ehSegunda = DataUtils.verificarDiaSemana(retorno.getDataRetorno(), Calendar.MONDAY);
 		Assert.assertTrue(ehSegunda);
+	}
+	
+	// Este teste precisa da injeção usando Mockito
+	// NESTE TESTE ESTOU FAZENDO 2 VALIDAÇÕES
+	// 1 -> Se o sistema está IMPEDINDO a locação para negativado
+	// 2 -> Se o método de verificação no SPC está sendo chamado
+	@Test
+	public void naoDeveAlugarFilmeParaNegativadoSPC() throws FilmeSemEstoqueException, LocadoraException, Exception {
+		//cenario
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
+		List<Filme> filmes = Arrays.asList(FilmeBuilder.umFilme().agora());
+		
+		// Como o retorno PADRÃO do mockito, para booleans é FALSE e para meu teste eu preciso de TRUE, eu "seto" mudo o comportamento
+		// de retorno do mockito, conforme abaixo.
+		Mockito.when(spc.possuiNegativacao(usuario)).thenReturn(true);
+		
+		// Como o resultado experado é o lançamento de uma exceção, preciso tratar pela forma nova
+		exception.expect(LocadoraException.class);
+		exception.expectMessage("Usuário Negativado"); // VERIFICAÇÃO 1
+		
+		// ATENÇÃO O exception precisa vir antes da ação!
+		
+		//acao
+		service.alugarFilme(usuario, filmes);
+		
+		//verificacao
+		//VERIFICAÇÃO 2
+		Mockito.verify(spc).possuiNegativacao(usuario);
+		
+	}
+	
+	@Test
+	public void deveEnviarEmailParaLocacoesAtrasadas() {
+		//cenario
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
+		Usuario usuario2 = UsuarioBuilder.umUsuario().comNome("Usuario em dia").agora();
+		Usuario usuario3 = UsuarioBuilder.umUsuario().comNome("Outro atrasado").agora();
+		
+		// Preciso que o dao retorne uma lista de locações pendentes
+		// Ou seja, criei um cenário com 1 locação pendente de 2 dias de atraso
+		//List<Locacao> locacoes = Arrays.asList(LocacaoBuilder.umLocacao().comUsuario(usuario).comDataRetorno(DataUtils.obterDataComDiferencaDias(-2)).agora());		
+		List<Locacao> locacoes = Arrays.asList(
+				LocacaoBuilder.umLocacao().atrasado().comUsuario(usuario).agora(),
+				LocacaoBuilder.umLocacao().comUsuario(usuario2).agora(),
+				LocacaoBuilder.umLocacao().atrasado().comUsuario(usuario3).agora()
+				);
+		
+		// expectativa p/ o dao retornar esta lista, usando mock
+		// ou seja, eu falo o que o mockito precisa retornar, que é um alista com locação pendente setada no cenário acima
+		Mockito.when(dao.obterLocacoesPendentes()).thenReturn(locacoes);
+		
+		//acao
+		service.notificarAtrasos();
+		
+		//verificacao
+		// O que vou verificar aqui é se o sistema está enviando os emails para os usuario em atraso
+		Mockito.verify(email).notificarAtraso(usuario); // verificar se usuario (atrasado) recebeu email
+		Mockito.verify(email).notificarAtraso(usuario3);// verificar se usuario3 (atrasado) recebeu email
+		Mockito.verify(email,Mockito.atLeastOnce()).notificarAtraso(usuario3); // verificar se o email foi enviado ao usuário3 ao menos 1x
+		// usando o never()
+		Mockito.verify(email, Mockito.never()).notificarAtraso(usuario2); // verificar se usuario2 (no prazo) NÃO recebeu email
+		
+		// VERIFICAR que nenhum outro usuário (fora os atrasados) recebeu email de notificação
+		Mockito.verifyNoMoreInteractions(email);
+		
+		// VERIFICAS se o método do SPC foi chamado. Ele NÃO DEVE ser chamado!
+		Mockito.verifyZeroInteractions(spc);
+		
+		// Verificar se a notificação por atraso está acontecendo 2x p/ Usuários
+		// Preciso usar o any e a class, para não especificar o usuário
+		// o any é um Matcher
+		Mockito.verify(email, Mockito.times(2)).notificarAtraso(Mockito.any(Usuario.class));
 	}
 }
 

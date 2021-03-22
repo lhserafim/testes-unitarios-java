@@ -21,6 +21,11 @@ public class UsuarioBuilder {
 		return builder; // retorna esta instancia de usuariobuilder
 	}
 	
+	public UsuarioBuilder comNome(String nome) {
+		usuario.setNome(nome);
+		return this;
+	}
+	
 	// este método "finaliza" o encadeamento
 	public Usuario agora() {
 		return usuario;

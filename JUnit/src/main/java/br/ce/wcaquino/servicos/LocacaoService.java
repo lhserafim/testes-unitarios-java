@@ -16,7 +16,10 @@ import br.ce.wcaquino.utils.DataUtils;
 
 public class LocacaoService {
 	
+	// Fazer as referências as interfaces
 	private LocacaoDAO dao;
+	private SPCService spcService;
+	private EmailService emailService;
 	
 	public Locacao alugarFilme(Usuario usuario, List<Filme> filmes) throws FilmeSemEstoqueException, LocadoraException, Exception {
 		
@@ -35,6 +38,10 @@ public class LocacaoService {
 				//throw new Exception("Filme sem estoque");
 				throw new FilmeSemEstoqueException();
 			}
+		}
+		
+		if(spcService.possuiNegativacao(usuario)) {
+			throw new LocadoraException("Usuário Negativado");
 		}
 		
 		Locacao locacao = new Locacao();
@@ -82,12 +89,37 @@ public class LocacaoService {
 		
 		return locacao;
 	}
+	
+	public void notificarAtrasos() {
+		List<Locacao> locacoes = dao.obterLocacoesPendentes();
+		// percorrendo a lista
+		for(Locacao locacao: locacoes) { 
+			if(locacao.getDataRetorno().before(new Date())) {
+				emailService.notificarAtraso(locacao.getUsuario());
+			
+			}
+			
+		}
+	}
+	
 	// Para poder usar o mockito, no teste do método salvar, precisamos fazer a Injeção abaixo
 	// Injeção da dependência
 	// Para SIMULAR como se o objeto estivesse com valores para persistir na base
 	public void setLocacaoDAO(LocacaoDAO dao) {
 		this.dao = dao;
 	}
+	
+	// Injetar
+	public void setSPCService(SPCService spc) {
+		spcService = spc;
+	}
+	
+	// Injetar
+	public void setEmailService(EmailService email) {
+		emailService = email;
+	}
+		 
+	
 
 }
 
