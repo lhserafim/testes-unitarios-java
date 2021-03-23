@@ -109,6 +109,19 @@ public class LocacaoService {
 		}
 	}
 	
+	// Método criado p/ permitir uma prorrogação da locação, basicamente estou criando uma nova locação, 
+	// pegando os parâmetros da locação anterior e atualizando data de entrega e valor
+	public void prorrogarLocacao(Locacao locacao, int dias) {
+		Locacao novaLocacao = new Locacao();
+		novaLocacao.setUsuario(locacao.getUsuario());
+		novaLocacao.setFilmes(locacao.getFilmes());
+		novaLocacao.setDataLocacao(new Date());
+		novaLocacao.setDataRetorno(DataUtils.obterDataComDiferencaDias(dias));
+		novaLocacao.setValor(locacao.getValor() * dias);
+		dao.salvar(novaLocacao);
+	}
+	
+	
 	// Para poder usar o mockito, no teste do método salvar, precisamos fazer a Injeção abaixo
 	// Injeção da dependência
 	// Para SIMULAR como se o objeto estivesse com valores para persistir na base
