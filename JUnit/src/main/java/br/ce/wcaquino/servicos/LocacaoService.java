@@ -40,7 +40,14 @@ public class LocacaoService {
 			}
 		}
 		
-		if(spcService.possuiNegativacao(usuario)) {
+		boolean negativado;
+		try {
+			negativado = spcService.possuiNegativacao(usuario); 
+		} catch(Exception e) {
+			throw new LocadoraException("Timeout ao consultar o serviço do SPC");
+		}
+		
+		if(negativado) {
 			throw new LocadoraException("Usuário Negativado");
 		}
 		

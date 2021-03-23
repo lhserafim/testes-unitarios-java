@@ -409,6 +409,29 @@ public class LocacaoServiceTest {
 		// o any é um Matcher
 		Mockito.verify(email, Mockito.times(2)).notificarAtraso(Mockito.any(Usuario.class));
 	}
+	
+	// Lançando Exceções
+	// Supondo que eu acesse um serviço externo e que pode ser instável, como o SPC
+	@Test
+	public void deveTratarErroNoSPC() throws FilmeSemEstoqueException, LocadoraException, Exception {
+		//cenario
+		Usuario usuario = UsuarioBuilder.umUsuario().agora();
+		List<Filme> filmes = Arrays.asList(FilmeBuilder.umFilme().agora());
+		
+		//Vou criar uma expectativa p/ simular uma chamada ao serviço do SPC que caiu (Timeout)
+		Mockito.when(spc.possuiNegativacao(usuario)).thenThrow(new Exception("Timeout"));
+		
+		//verificacao
+		// Quando uso a "forma nova" a verificação precisa ficar antes
+		// Além disso, para que este teste possa funcionar, preciso adicionar a exceção na Interface SPCService
+		exception.expect(LocadoraException.class);
+		exception.expectMessage("Timeout ao consultar o serviço do SPC");
+		
+		//acao
+		service.alugarFilme(usuario, filmes);
+		
+		
+	}
 }
 
 
